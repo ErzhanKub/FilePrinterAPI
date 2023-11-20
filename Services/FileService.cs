@@ -20,6 +20,17 @@ namespace FilePrinterAPI.Services
         // Асинхронный метод для получение данных файла и контент в формате base64
         public async Task<FileModel> GetSingleFileAsync(string path)
         {
+            if (string.IsNullOrEmpty(path) || !Path.IsPathFullyQualified(path))
+            {
+                throw new ArgumentException("Path is not valid");
+            }
+
+            if (!File.Exists(path))
+            {
+                _logger.LogError("File at {path} does not exist", path);
+                throw new FileNotFoundException($"File at {path} does not exist");
+            }
+
             try
             {
                 // Получение информации о файле, использую класс FileInfo
@@ -59,6 +70,17 @@ namespace FilePrinterAPI.Services
         // Асинхронный метод для получения всех файлов с расширением соотвествующие _allowedExtensions, без контента
         public async Task<IEnumerable<FileModel>> GetAllFilesAsync(string path)
         {
+            if (string.IsNullOrEmpty(path) || !Path.IsPathFullyQualified(path))
+            {
+                throw new ArgumentException("Path is not valid");
+            }
+
+            if (!Directory.Exists(path))
+            {
+                _logger.LogError("Directory at {path} does not exist", path);
+                throw new DirectoryNotFoundException($"Directory at {path} does not exist");
+            }
+
             try
             {
                 var files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories) // Получение всех файлов, "*.*" - это маска поиска(соответствует всем файлам). AllDirectories - поиск включать все подкаталоги
@@ -83,7 +105,8 @@ namespace FilePrinterAPI.Services
                 throw;
             }
         }
-        // Асихронный метод для получения название накопителей в виде строки(для избежание цикличной сериализации/десериализации)
-        public async Task<IEnumerable<string>> GetAllDrives() => DriveInfo.GetDrives().Select(d => d.Name);
+
+        // метод для получения название накопителей в виде строки(для избежание цикличной сериализации/десериализации)
+        public IEnumerable<string> GetAllDrives() => DriveInfo.GetDrives().Select(d => d.Name);
     }
 }

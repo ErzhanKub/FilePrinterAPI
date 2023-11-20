@@ -6,6 +6,6 @@ namespace FilePrinterAPI.Interfaces
     {
         Task<IEnumerable<FileModel>> GetAllFilesAsync(string directoryPath);
         Task<FileModel> GetSingleFileAsync(string filePath);
-        Task<IEnumerable<string>> GetAllDrives();
+        IEnumerable<string> GetAllDrives();
     }
 }

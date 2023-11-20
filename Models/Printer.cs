@@ -3,15 +3,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FilePrinterAPI.Models
 {
-    // Небольшая валидация с помошью атрибутов
-    // required - для заглушки предупреждения
     public sealed record Printer
     {
-        [Required]
-        [StringLength(100)]
-        public required string Name { get; set; }
+        [Required(ErrorMessage = "Name is required.")]
+        [StringLength(100, ErrorMessage = "Name cannot be longer than 100 characters.")]
+        public required string Name { get; init; }
 
-        [Required]
-        public PrinterStatus Status { get; set; }
+        [Required(ErrorMessage = "Status is required.")]
+        public PrinterStatus Status { get; init; }
     }
 }

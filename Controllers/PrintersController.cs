@@ -18,21 +18,21 @@ namespace FilePrinterAPI.Controllers
         }
 
         [HttpGet]
-        [SwaggerOperation(Summary = "Получает информацию о всех доступных принтерах")]
-        [SwaggerResponse(StatusCodes.Status200OK, "Информация о принтерах успешно получена")]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Произошла ошибка при получении информации о принтерах")]
-        public async Task<IActionResult> RetrievePrinters()
+        [SwaggerOperation(Summary = "Retrieves information about all available printers")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Printer information successfully retrieved")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while retrieving printer information")]
+        public IActionResult RetrievePrinters()
         {
             try
             {
-                var response = await _printerService.GetPrintersInfoAsync();
+                var response = _printerService.GetPrintersInfo();
                 _logger.LogInformation("Successfully retrieved printer info");
                 return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while receiving printer info");
-                return new StatusCodeResult(500);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
     }

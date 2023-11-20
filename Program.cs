@@ -15,6 +15,7 @@ builder.Services.AddSwaggerGen(opts => opts.EnableAnnotations());
 
 builder.Services.AddScoped<IFileSystemAccessService, FileService>();
 builder.Services.AddScoped<IPrinterService, PrinterService>();
+builder.Services.AddScoped<IPrinterProvider, PrinterProvider>();
 
 var app = builder.Build();
 

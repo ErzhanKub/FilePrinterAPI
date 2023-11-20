@@ -2,23 +2,22 @@
 
 namespace FilePrinterAPI.Models
 {
-    // Небольшая валидация с помошью атрибутов
-    // required - для заглушки предупреждения
     public sealed record FileModel
     {
-        [Required]
-        [StringLength(100)]
-        public required string Name { get; set; }
+        [Required(ErrorMessage = "Name is required.")]
+        [StringLength(100, ErrorMessage = "Name cannot be longer than 100 characters.")]
+        public required string Name { get; init; }
 
-        [Required]
-        public required string Extension { get; set; }
+        [Required(ErrorMessage = "Extension is required.")]
+        public required string Extension { get; init; }
 
-        [Required]
-        [Range(0, long.MaxValue)]
-        public long Size { get; set; }
+        [Required(ErrorMessage = "Size is required.")]
+        [Range(0, long.MaxValue, ErrorMessage = "Size must be a positive number.")]
+        public long Size { get; init; }
 
-        [Required]
-        public required string Path { get; set; }
-        public string? ContentBase64 { get; set; }
+        [Required(ErrorMessage = "Path is required.")]
+        public required string Path { get; init; }
+
+        public string? ContentBase64 { get; init; }
     }
 }

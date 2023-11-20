@@ -18,9 +18,9 @@ namespace FilePrinterAPI.Controllers
         }
 
         [HttpGet("drives")]
-        [SwaggerOperation(Summary = "Получает список всех накопителей")]
-        [SwaggerResponse(StatusCodes.Status200OK, "Список накопителей успешно получено")]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Произошла ошибка при получении списка накопителей")]
+        [SwaggerOperation(Summary = "Retrieves a list of all drives")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Drive list successfully retrieved")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the list of drives")]
         public IActionResult GetDrives()
         {
             try
@@ -32,33 +32,33 @@ namespace FilePrinterAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in GetDrives");
-                return new StatusCodeResult(500);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
         [HttpGet("files/{path}")]
-        [SwaggerOperation(Summary = "Получает список всех файлов в указанной директории")]
-        [SwaggerResponse(StatusCodes.Status200OK, "Список файлов успешно получено")]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "Произошла ошибка при получении списка файлов")]
-        public IActionResult GetFilesInDirectory(string path)
+        [SwaggerOperation(Summary = "Retrieves a list of all files in the specified directory")]
+        [SwaggerResponse(StatusCodes.Status200OK, "File list successfully retrieved")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "An error occurred while retrieving the file list")]
+        public async Task<IActionResult> GetFilesInDirectory(string path)
         {
             try
             {
-                var files = _fileService.GetAllFilesAsync(path);
+                var files = await _fileService.GetAllFilesAsync(path);
                 _logger.LogInformation("GetFilesInDirectory was called with: {path}", path);
                 return Ok(files);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in GetFilesInDirectory with: {path}", path);
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message, path });
             }
         }
 
         [HttpGet("files/content/{path}")]
-        [SwaggerOperation(Summary = "Получает содержимое файла по указанному пути")]
-        [SwaggerResponse(StatusCodes.Status200OK, "Содержимое файла успешно получено")]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "Произошла ошибка при получении содержимого файла")]
+        [SwaggerOperation(Summary = "Retrieves the content of the file at the specified path")]
+        [SwaggerResponse(StatusCodes.Status200OK, "File content successfully retrieved")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "An error occurred while retrieving the file content")]
         public async Task<IActionResult> GetFileContent(string path)
         {
             try
@@ -70,7 +70,7 @@ namespace FilePrinterAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in GetFileContent with: {path}", path);
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message, path });
             }
         }
     }

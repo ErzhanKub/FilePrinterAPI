@@ -1,51 +1,50 @@
 ﻿using FilePrinterAPI.Interfaces;
 using FilePrinterAPI.Models;
 using System.Drawing.Printing;
+using FilePrinterAPI.Enums;
 
 namespace FilePrinterAPI.Services
 {
-    // Сервис для работы с принтером
+    // сервис для работы с принтером
     public sealed class PrinterService : IPrinterService
     {
+        // Закрытые поля для логгера и провайдера принтеров
         private readonly ILogger<PrinterService> _logger;
+        private readonly IPrinterProvider _printerProvider;
 
-        public PrinterService(ILogger<PrinterService> logger)
+        public PrinterService(ILogger<PrinterService> logger, IPrinterProvider printerProvider)
         {
             _logger = logger;
+            _printerProvider = printerProvider;
         }
 
-        // Асинхронный метод (для того чтобы в будущем получать информацию о принтерах из удаленного источника), который возращает коллекцию моделей Printer
-        public Task<IEnumerable<Printer>> GetPrintersInfoAsync()
+        // Метод для получения информации о принтерах
+        public IEnumerable<Printer> GetPrintersInfo()
         {
-            try
-            {
-                // Лист принтеров
-                var printers = new List<Printer>();
+            var printers = new List<Printer>();
 
-                // Перебираю все установленые принтеры
-                foreach (string name in PrinterSettings.InstalledPrinters)
+            // Перебор всех установленных принтеров
+            foreach (string name in _printerProvider.GetInstalledPrinters())
+            {
+                // Создаю экземпляр PrinterSettings с свойством PrinterName = name,
+                // чтобы получить доступ к другим свойствам текущего принтера(получаю доступ к настройкам текущего принтера)
+                var printerSettings = new PrinterSettings { PrinterName = name };
+
+                // Создание экземпляра принтера с заданными свойствами
+                var printer = new Printer
                 {
-                    // Создаю экземпляр PrinterSettings с свойством PrinterName = name, чтобы получить доступ к другим свойствам текущего принтера(получаю доступ к настройкам текущего принтера)
-                    var printerSettings = new PrinterSettings { PrinterName = name };
+                    Name = name,
+                    // Устанавливаю статус принтера. Использую тернарную операция для проверки bool IsValid - если true то принтер готов, иначе не недоступен
+                    Status = printerSettings.IsValid ? PrinterStatus.Ready : PrinterStatus.Unavailable
+                };
+                // Добавление принтера в список
+                printers.Add(printer);
+            }
 
-                    // Создаю экземпляр Printer
-                    var printer = new Printer
-                    {
-                        // Уставналивая Name из name(PrinterSettings.InstalledPrinters)
-                        Name = name,
-                        // Устанавливаю статус принтера. Использую тернарную операция для проверки bool IsValid - если true то принтер готов, иначе не недоступен
-                        Status = printerSettings.IsValid ? Enums.PrinterStatus.Ready : Enums.PrinterStatus.Unavailable
-                    };
-                    printers.Add(printer);
-                }
-                _logger.LogInformation("Successfully get printer info");
-                return Task.FromResult(printers.AsEnumerable());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while receiving printer info");
-                throw;
-            }
+            // Логирование успешного получения информации о принтерах
+            _logger.LogInformation("Successfully get printer info");
+            // Возвращение списка принтеров
+            return printers;
         }
     }
 }
