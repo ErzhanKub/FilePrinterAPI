@@ -10,13 +10,25 @@ namespace FilePrinterAPI.Controllers
     {
         private readonly ILogger<PrinterInfoController> _logger;
         private readonly IPrinterService _printerService;
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PrinterInfoController"/> class.
+        /// </summary>
+        /// <param name="logger">The logger that records the events.</param>
+        /// <param name="printerService">A service that provides access to printers.</param>
         public PrinterInfoController(ILogger<PrinterInfoController> logger, IPrinterService printerService)
         {
             _logger = logger;
             _printerService = printerService;
         }
 
+        /// <summary>
+        /// Retrieves information about all available printers
+        /// </summary>
+        /// <returns>A list of printer info.</returns>
+        /// <example>
+        /// GET api/printers
+        /// Response: [{"name": "OneNote (Desktop)", "status": 1}, {"name": "Microsoft Print to PDF", "status": 3}, ...]
+        /// </example>
         [HttpGet]
         [SwaggerOperation(Summary = "Retrieves information about all available printers")]
         [SwaggerResponse(StatusCodes.Status200OK, "Printer information successfully retrieved")]
