@@ -1,6 +1,7 @@
 ﻿using FilePrinterAPI.Interfaces;
 using FilePrinterAPI.Models;
 using FluentValidation;
+using System.IO;
 
 namespace FilePrinterAPI.Services
 {
@@ -20,21 +21,14 @@ namespace FilePrinterAPI.Services
         // Асинхронный метод для получение данных файла и контент в формате base64
         public async Task<FileModel> GetSingleFileAsync(string path)
         {
-            if (string.IsNullOrEmpty(path) || !Path.IsPathFullyQualified(path))
-            {
-                throw new ArgumentException("Path is not valid");
-            }
+            ValidatePath(path);
 
-            if (!File.Exists(path))
-            {
-                _logger.LogError("File at {path} does not exist", path);
-                throw new FileNotFoundException($"File at {path} does not exist");
-            }
+            // Получение информации о файле и проврка, использую класс FileInfo
+            var file = new FileInfo(path);
+            EnsureFileExists(file);
 
             try
             {
-                // Получение информации о файле, использую класс FileInfo
-                var fileInfo = new FileInfo(path);
 
                 // Считывание содержимое бинарного файла в массив байтов
                 var fileDate = await File.ReadAllBytesAsync(path);
@@ -43,19 +37,7 @@ namespace FilePrinterAPI.Services
                 var base64File = Convert.ToBase64String(fileDate);
 
                 // Создание и заполнение модели
-                var fileModel = new FileModel
-                {
-                    // Имя файла
-                    Name = fileInfo.Name,
-                    // Расширение файла в нижнем регистре
-                    Extension = fileInfo.Extension.ToLower(),
-                    // Размер (длина) файла
-                    Size = fileInfo.Length,
-                    // Полный путь
-                    Path = fileInfo.FullName,
-                    // Закодированный контент
-                    ContentBase64 = base64File,
-                };
+                var fileModel = CreateFileModel(file, base64File);
 
                 _logger.LogInformation("Successfully get file at {path}", path);
                 return fileModel;
@@ -67,37 +49,26 @@ namespace FilePrinterAPI.Services
             }
         }
 
-        // Асинхронный метод для получения всех файлов с расширением соотвествующие _allowedExtensions, без контента
-        public async Task<IEnumerable<FileModel>> GetAllFilesAsync(string path)
-        {
-            if (string.IsNullOrEmpty(path) || !Path.IsPathFullyQualified(path))
-            {
-                throw new ArgumentException("Path is not valid");
-            }
+        // метод для получения название накопителей в виде строки(для избежание цикличной сериализации/десериализации)
+        public IEnumerable<string> GetAllDrives() => DriveInfo.GetDrives().Select(d => d.Name);
 
-            if (!Directory.Exists(path))
-            {
-                _logger.LogError("Directory at {path} does not exist", path);
-                throw new DirectoryNotFoundException($"Directory at {path} does not exist");
-            }
+        // Асинхронный метод для получения всех файлов с расширением соотвествующие _allowedExtensions, без контента
+        public async Task<IEnumerable<FileModel>> GetAllowedFilesAndDirectoriesAsync(string path)
+        {
+            // Проверка на то что путь не пустой и коррекнтный
+            ValidatePath(path);
+
+            // Проверка на существование директория
+            var directory = new DirectoryInfo(path);
+            EnsureDirectoryExists(directory);
 
             try
             {
-                var files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories) // Получение всех файлов, "*.*" - это маска поиска(соответствует всем файлам). AllDirectories - поиск включать все подкаталоги
-                    .Where(file => _allowedExtensions.Contains(Path.GetExtension(file).ToLower())) // Фильрация по регистру, оставляет только те, у которых регситр соотвествует Contains содержимого в списке _allowedExtensions.
-                    .Select(file => new FileModel // Преобразует кайждый файл в FileModel
-                    {
-                        // Имя файла, получаем из метода GetFileName класса Path
-                        Name = Path.GetFileNameWithoutExtension(file),
-                        // Расширение в ниждем регистре
-                        Extension = Path.GetExtension(file).ToLower(),
-                        // Размер(длина)
-                        Size = new FileInfo(file).Length,
-                        // Путь
-                        Path = file
-                    });
+                // Фильтрация по разрешенным расширениям и создание модели
+                var filesAndDirectories = FilterAndMapEntities(directory);
+
                 _logger.LogInformation("Successfully retrieved files from {path}", path);
-                return files;
+                return filesAndDirectories;
             }
             catch (Exception ex)
             {
@@ -106,7 +77,64 @@ namespace FilePrinterAPI.Services
             }
         }
 
-        // метод для получения название накопителей в виде строки(для избежание цикличной сериализации/десериализации)
-        public IEnumerable<string> GetAllDrives() => DriveInfo.GetDrives().Select(d => d.Name);
+        private void ValidatePath(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !Path.IsPathFullyQualified(path))
+            {
+                throw new ArgumentException("Path is not valid");
+            }
+        }
+
+        private void EnsureDirectoryExists(DirectoryInfo directory)
+        {
+            if (!directory.Exists)
+            {
+                _logger.LogError("Directory at {path} does not exist", directory.FullName);
+                throw new DirectoryNotFoundException($"Directory at {directory.FullName} does not exist");
+            }
+        }
+
+        private void EnsureFileExists(FileInfo file)
+        {
+            if (!file.Exists)
+            {
+                _logger.LogError("File at {path} does not exist", file.FullName);
+                throw new FileNotFoundException($"File at {file.FullName} does not exist");
+            }
+        }
+
+        private IEnumerable<FileModel> FilterAndMapEntities(DirectoryInfo directory)
+        {
+            // entity is FileInfo file - проверка, что текущий элемент entity является объектом типа FileInfo, если да то присваиваем этот обьект к переменой file и далтше проверяме расиширение текущего файла. 
+            // entity is DirectoryInfo - проверка, что текущий элемент entity является объектом типа DirectoryInfo.
+            return directory.GetFileSystemInfos().Where(entity => entity is FileInfo file && _allowedExtensions.Contains(file.Extension.ToLowerInvariant()) || entity is DirectoryInfo)
+                .Select(entity => new FileModel
+                {
+                    Name = entity.Name,
+                    // В расширение обьекта FileModel мы присваиваем расширение файла, если это файл, иначе присваиваем "directory" - говоря что это папка.
+                    // P.s. можно было вместо "directory" присвоить null.
+                    Extension = entity is FileInfo file ? file.Extension.ToLowerInvariant() : "directory",
+                    // Здесь такая же логика как и с расширением.
+                    Size = entity is FileInfo file1 ? file1.Length : 0,
+                    Path = entity.FullName,
+                });
+        }
+
+        private FileModel CreateFileModel(FileInfo file, string base64File)
+        {
+            return new FileModel
+            {
+                // Имя файла
+                Name = file.Name,
+                // Расширение файла в нижнем регистре
+                Extension = file.Extension.ToLowerInvariant(),
+                // Размер (длина) файла
+                Size = file.Length,
+                // Полный путь
+                Path = file.FullName,
+                // Закодированный контент
+                ContentBase64 = base64File,
+            };
+        }
     }
 }

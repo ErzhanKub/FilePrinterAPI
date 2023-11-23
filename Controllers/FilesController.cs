@@ -66,7 +66,7 @@ namespace FilePrinterAPI.Controllers
         {
             try
             {
-                var files = await _fileService.GetAllFilesAsync(directoryPath);
+                var files = await _fileService.GetAllowedFilesAndDirectoriesAsync(directoryPath);
                 _logger.LogInformation("GetFilesInDirectory was called with: {directoryPath}", directoryPath);
                 return Ok(files);
             }
