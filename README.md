@@ -1,34 +1,36 @@
 # FilePrinterAPI
 FilePrinterAPI - это веб-сервис, который предоставляет доступ к файлам с определенными расширениями (“.doc”, “.docx”, “.xls”, “.xlsx”, “.pdf”, “.jpg”, “.png”) и позволяет печатать их на подключенных принтерах.
 
-# Особенности
-• Получение информации о доступных принтерах и их статусе (готов/занят)
+FilePrinterAPI is a web service that provides access to files with specific extensions (“.doc”, “.docx”, “.xls”, “.xlsx”, “.pdf”, “.jpg”, “.png” ) and allows you to print them on connected printers.
 
-• Получение списка накопителей (дисков) на компьютере
+# Особенности / Peculiarities
 
-• Получение списка файлов и подкаталогов в указанной директории
+• Получение информации о доступных принтерах и их статусе (готов/занят) / Obtaining information about available printers and their status (ready/busy)
 
-• Получение содержимого файла в формате base64
+• Получение списка накопителей (дисков) на компьютере / Getting a list of drives (drives) on your computer
 
-• Печать файла на выбранном принтере (в будущем)
+• Получение списка файлов и подкаталогов в указанной директории / Getting a list of files and subdirectories in a specified directory
 
-# Установка
-Для установки и запуска FilePrinterAPI вам потребуются следующие компоненты:
+• Получение содержимого файла в формате base64 / Getting file contents in base64 format
 
-• .NET 7.0 или выше
+• Печать файла на выбранном принтере (в будущем) / Print a file to a selected printer (future)
 
-# Использование
-Для того, чтобы использовать FilePrinterAPI, вам нужно отправлять HTTP-запросы к соответствующим эндпоинтам. Вы можете использовать любой HTTP-клиент, например Postman, или воспользоваться документацией Swagger, если программа запущена в режиме debug.
+# Technologies used
 
-Вот примеры некоторых запросов и ответов:
+1) .Net 7.0
+2) ASP.NET WebApi
 
-**• Получение информации о принтерах**
+# Использование / Using
 
-Запрос: 
+Примеры / Example 
+
+**• Получение информации о принтерах / Getting information about printers**
+
+Запрос / Request: 
 
 GET /api/printers
 
-Ответ: 
+Ответ / Response: 
 
 JSON [
   {
@@ -41,25 +43,25 @@ JSON [
   }
 ]
 
-**• Получение списка накопителей**
+**• Получение списка накопителей / Getting a list of drives**
 
-Запрос: 
+Запрос / Request: 
 
 GET /api/file-systems/drives
 
-Ответ: 
+Ответ / Response: 
 
 JSON [
   "C:\\"
 ]
 
-**• Получение списка файлов и подкаталогов**
+**• Получение списка файлов и подкаталогов / Getting a list of files and subdirectories**
 
-Запрос: 
+Запрос / Request: 
 
 GET /api/file-systems/files/directoryPath=C:\Users\user\Documents
 
-Ответ:
+Ответ / Response:
 
 JSON [
   {
@@ -82,13 +84,13 @@ JSON [
   }
 ]
 
-**• Получение содержимого файла**
+**• Получение содержимого файла / Getting the contents of a file**
 
-Запрос:
+Запрос / Request:
 
 GET /api/file-systems/files/content/filePath=C:\Users\user\Documents\resume.docx
 
-Ответ:
+Ответ / Response:
 
 JSON {
   "Name": "resume.docx",
@@ -97,19 +99,3 @@ JSON {
   "Path": "C:\\Users\\user\\Documents\\resume.docx",
   "Content": "UEsDBBQABgAIAAAAIQDfpNJsWgEAACAFAAATAAgCW0NvbnRlbnRfVHlwZXNdLnhtbCCiBAIooAAC..."
 }
-
-# Планы на будущее
-В будущем я планирую добавить следующие функции и улучшения к FilePrinterAPI:
-
-• Поддержка других форматов файлов, таких как “.ppt”, “.txt”, “.csv” и т.д.
-
-• Возможность выбирать параметры печати, такие как ориентация, масштаб, качество и т.д.
-
-• Возможность просматривать содержимое файла в браузере перед печатью
-
-• Возможность загружать файлы с компьютера пользователя или из интернета
-
-• Возможность отправлять файлы на печать по электронной почте или через мобильное приложение
-
-# Лицензия
-Nope
